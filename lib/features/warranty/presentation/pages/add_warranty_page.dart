@@ -469,23 +469,84 @@ class _AddWarrantyPageState extends State<AddWarrantyPage> {
   }
 }
 
-class SimpleScannerPage extends StatelessWidget {
+class SimpleScannerPage extends StatefulWidget {
   const SimpleScannerPage({super.key});
+
+  @override
+  State<SimpleScannerPage> createState() => _SimpleScannerPageState();
+}
+
+class _SimpleScannerPageState extends State<SimpleScannerPage> {
+  late MobileScannerController controller;
+  bool _isScanned = false;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      returnImage: false,
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Scan Code')),
-      body: MobileScanner(
-        onDetect: (capture) {
-          final List<Barcode> barcodes = capture.barcodes;
-          for (final barcode in barcodes) {
-            if (barcode.rawValue != null) {
-              Navigator.pop(context, barcode.rawValue);
-              break; // Return first detected code
-            }
-          }
-        },
+      body: Stack(
+        children: [
+          MobileScanner(
+            controller: controller,
+            onDetect: (capture) {
+              if (_isScanned) return;
+              
+              final List<Barcode> barcodes = capture.barcodes;
+              for (final barcode in barcodes) {
+                if (barcode.rawValue != null) {
+                  setState(() {
+                    _isScanned = true;
+                  });
+                  Navigator.pop(context, barcode.rawValue);
+                  break; 
+                }
+              }
+            },
+          ),
+          // Overlay
+          Center(
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.7), width: 2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          const Positioned(
+            bottom: 50,
+            left: 0,
+            right: 0,
+            child: Text(
+              'Di chuyển camera để quét mã',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                shadows: [
+                  Shadow(blurRadius: 4, color: Colors.black, offset: Offset(1, 1)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
