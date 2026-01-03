@@ -124,19 +124,7 @@ class _HomePageState extends State<HomePage> {
     }
     
     _warrantiesStream = rawStream.map((list) {
-      // Client-side filtering for Search (since stream doesn't support complex ILIKE OR dynamically easily)
-      // We will filter the list here if search text exists.
-      final query = _searchController.text.toLowerCase().trim();
-      if (query.isEmpty) {
-        return list.map((json) => WarrantyModel.fromJson(json)).toList();
-      } else {
-        return list.map((json) => WarrantyModel.fromJson(json)).where((item) {
-          return item.productName.toLowerCase().contains(query) ||
-                 (item.productCode?.toLowerCase().contains(query) ?? false) ||
-                 (item.sellerName?.toLowerCase().contains(query) ?? false) ||
-                 (item.category.toLowerCase().contains(query)); // Added category search
-        }).toList();
-      }
+      return list.map((json) => WarrantyModel.fromJson(json)).toList();
     });
   }
   
@@ -390,7 +378,20 @@ class _HomePageState extends State<HomePage> {
 
           // Apply filters for ListView
           List<WarrantyModel> displayedWarranties = allWarranties;
+
+          // 1. Search Filter
+          final query = _searchController.text.toLowerCase().trim();
+          if (query.isNotEmpty) {
+            displayedWarranties = displayedWarranties.where((item) {
+              return item.productName.toLowerCase().contains(query) ||
+                     (item.productCode?.toLowerCase().contains(query) ?? false) ||
+                     (item.sellerName?.toLowerCase().contains(query) ?? false) ||
+                     (item.sellerPhone?.toLowerCase().contains(query) ?? false) ||
+                     (item.category.toLowerCase().contains(query));
+            }).toList();
+          }
           
+          // 2. Expiring Soon Filter
           if (_showExpiringOnly) {
             displayedWarranties = displayedWarranties.where((w) {
                final days = w.warrantyEndDate.difference(DateTime.now()).inDays;

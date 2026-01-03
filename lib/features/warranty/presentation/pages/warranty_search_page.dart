@@ -38,7 +38,7 @@ class _WarrantySearchPageState extends State<WarrantySearchPage> {
       
       // If query provided, filter
       if (query.isNotEmpty) {
-        builder = builder.or('product_name.ilike.%$query%,product_code.ilike.%$query%,seller_name.ilike.%$query%');
+        builder = builder.or('product_name.ilike.%$query%,product_code.ilike.%$query%,seller_name.ilike.%$query%,seller_phone.ilike.%$query%');
       }
       
       // We do NOT filter by user_id here to debug validity of data.
